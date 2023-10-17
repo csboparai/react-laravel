@@ -10,6 +10,7 @@ function Login() {
     const emailRef = useRef();
     const passwordRef = useRef();
     const [errors, setErrors] = useState(null);
+    const { setUser, setToken } = useStateContext();
 
     const onSubmit = (ev) => {
         ev.preventDefault();
@@ -18,9 +19,9 @@ function Login() {
             email: emailRef.current.value,
             password: passwordRef.current.value,
         };
-
+        setErrors(null);
         console.log(payload);
-        axiosClient.post("/signup",payload)
+        axiosClient.post("/login",payload)
         .then(({data}) => {
             setUser(data.user);
             setToken(data.token);
@@ -28,7 +29,14 @@ function Login() {
         .catch(err => {
             const response = err.response;
             if(response && response.status == 422){
-                setErrors(response.data.errors);
+                if(response.data.errors){
+                    setErrors(response.data.errors);
+                } else {
+                    setErrors({
+                        email:[response.data.message]
+                    })
+                }
+
                 //console.log(response.data.errors);
             }
         })
@@ -38,8 +46,16 @@ function Login() {
             <div className="form">
                 <form onSubmit={onSubmit}>
                     <h1 className="title">Login into your account</h1>
-                    <input placeholder="Email" type="email" />
-                    <input type="password" placeholder="Password" />
+                    <h1 className="title">Sign up for free</h1>
+                    {errors && <div className="alert">
+                        {Object.keys(errors).map(key => (
+                            <p key={errors[key][0]}>{errors[key][0]}</p>
+                        ))}
+                    </div>
+
+                    }
+                    <input ref={emailRef} placeholder="Email" type="email" />
+                    <input ref={passwordRef} type="password" placeholder="Password" />
                     <button className="btn btn-block">Login</button>
                     <p className="message">
                         Not Registered?{" "}
